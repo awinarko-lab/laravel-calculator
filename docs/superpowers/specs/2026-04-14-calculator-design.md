@@ -44,7 +44,7 @@ Styled with Tailwind CSS 4.
 ## Calculator Behavior
 
 - **Expression building:** Tap digits/operators to build an expression string displayed live
-- **Evaluation:** Press `=` to evaluate. Result displays and the calculation is saved to the database
+- **Evaluation:** Press `=` to evaluate using a simple token-based parser (not PHP `eval()` for safety). Supports +, -, *, / with standard operator precedence. Result displays and the calculation is saved to the database
 - **Error handling:** Division by zero shows "Error" on display (no crash, nothing saved to DB)
 - **Decimal handling:** One decimal point per number segment (prevents `12.3.4`)
 - **Clear (C):** Resets the entire expression
