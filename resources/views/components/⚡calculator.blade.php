@@ -106,6 +106,7 @@ new class extends Component
         $calculation = Calculation::find($id);
 
         if ($calculation) {
+            // BUG: loads result instead of expression
             $this->expression = $calculation->result;
             $this->result = null;
             $this->hasResult = false;
