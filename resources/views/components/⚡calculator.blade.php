@@ -13,7 +13,7 @@ new class extends Component
     public function press(string $value): void
     {
         if ($this->hasResult) {
-            if (in_array($value, ['+', '-', '*', '/'])) {
+            if (in_array($value, ['+', '-', '*', '/', '%'])) {
                 $this->expression = $this->result . $value;
                 $this->result = null;
                 $this->hasResult = false;
@@ -27,9 +27,9 @@ new class extends Component
         }
 
         // Prevent double operators — replace the last one
-        if (in_array($value, ['+', '-', '*', '/'])) {
+        if (in_array($value, ['+', '-', '*', '/', '%'])) {
             $lastChar = substr($this->expression, -1);
-            if (in_array($lastChar, ['+', '-', '*', '/'])) {
+            if (in_array($lastChar, ['+', '-', '*', '/', '%'])) {
                 $this->expression = substr($this->expression, 0, -1) . $value;
 
                 return;
@@ -38,7 +38,7 @@ new class extends Component
 
         // Prevent double decimal in current number segment
         if ($value === '.') {
-            $segments = preg_split('/[+\-*\/]/', $this->expression);
+            $segments = preg_split('/[+\-*\/%]/', $this->expression);
             $lastSegment = end($segments);
             if (str_contains($lastSegment, '.')) {
                 return;
@@ -46,7 +46,7 @@ new class extends Component
         }
 
         // Prevent starting with operator other than minus
-        if ($this->expression === '' && in_array($value, ['+', '*', '/'])) {
+        if ($this->expression === '' && in_array($value, ['+', '*', '/', '%'])) {
             return;
         }
 
@@ -60,7 +60,7 @@ new class extends Component
         }
 
         $lastChar = substr($this->expression, -1);
-        if (in_array($lastChar, ['+', '-', '*', '/'])) {
+        if (in_array($lastChar, ['+', '-', '*', '/', '%'])) {
             return;
         }
 
@@ -120,7 +120,7 @@ new class extends Component
 
     public function formatExpression(string $expression): string
     {
-        return preg_replace('/([+\-*\/])/', ' $1 ', $expression);
+        return preg_replace('/([+\-*\/%])/', ' $1 ', $expression);
     }
 
     public function with(): array
@@ -153,33 +153,37 @@ new class extends Component
 
         {{-- Buttons --}}
         <div class="grid grid-cols-4 gap-px bg-gray-200 dark:bg-gray-700 p-px">
-            {{-- Row 1: C, backspace, /, * --}}
+            {{-- Row 1: C, backspace, %, / --}}
             <button wire:click="clear" class="bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white text-xl font-medium p-4 hover:bg-gray-400 dark:hover:bg-gray-500 active:bg-gray-500 dark:active:bg-gray-400 transition-colors">C</button>
             <button wire:click="backspace" class="bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white text-xl font-medium p-4 hover:bg-gray-400 dark:hover:bg-gray-500 active:bg-gray-500 dark:active:bg-gray-400 transition-colors">&larr;</button>
+            <button wire:click="press('%')" class="bg-amber-500 dark:bg-amber-600 text-white text-xl font-medium p-4 hover:bg-amber-600 dark:hover:bg-amber-700 active:bg-amber-700 transition-colors">%</button>
             <button wire:click="press('/')" class="bg-amber-500 dark:bg-amber-600 text-white text-xl font-medium p-4 hover:bg-amber-600 dark:hover:bg-amber-700 active:bg-amber-700 transition-colors">&divide;</button>
-            <button wire:click="press('*')" class="bg-amber-500 dark:bg-amber-600 text-white text-xl font-medium p-4 hover:bg-amber-600 dark:hover:bg-amber-700 active:bg-amber-700 transition-colors">&times;</button>
 
-            {{-- Row 2: 7, 8, 9, - --}}
+            {{-- Row 2: 7, 8, 9, * --}}
             <button wire:click="press('7')" class="bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-xl font-medium p-4 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-colors">7</button>
             <button wire:click="press('8')" class="bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-xl font-medium p-4 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-colors">8</button>
             <button wire:click="press('9')" class="bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-xl font-medium p-4 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-colors">9</button>
-            <button wire:click="press('-')" class="bg-amber-500 dark:bg-amber-600 text-white text-xl font-medium p-4 hover:bg-amber-600 dark:hover:bg-amber-700 active:bg-amber-700 transition-colors">&minus;</button>
+            <button wire:click="press('*')" class="bg-amber-500 dark:bg-amber-600 text-white text-xl font-medium p-4 hover:bg-amber-600 dark:hover:bg-amber-700 active:bg-amber-700 transition-colors">&times;</button>
 
-            {{-- Row 3: 4, 5, 6, + --}}
+            {{-- Row 3: 4, 5, 6, - --}}
             <button wire:click="press('4')" class="bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-xl font-medium p-4 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-colors">4</button>
             <button wire:click="press('5')" class="bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-xl font-medium p-4 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-colors">5</button>
             <button wire:click="press('6')" class="bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-xl font-medium p-4 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-colors">6</button>
-            <button wire:click="press('+')" class="bg-amber-500 dark:bg-amber-600 text-white text-xl font-medium p-4 hover:bg-amber-600 dark:hover:bg-amber-700 active:bg-amber-700 transition-colors">+</button>
+            <button wire:click="press('-')" class="bg-amber-500 dark:bg-amber-600 text-white text-xl font-medium p-4 hover:bg-amber-600 dark:hover:bg-amber-700 active:bg-amber-700 transition-colors">&minus;</button>
 
-            {{-- Row 4: 1, 2, 3, = (rowspan 2) --}}
+            {{-- Row 4: 1, 2, 3, + --}}
             <button wire:click="press('1')" class="bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-xl font-medium p-4 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-colors">1</button>
             <button wire:click="press('2')" class="bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-xl font-medium p-4 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-colors">2</button>
             <button wire:click="press('3')" class="bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-xl font-medium p-4 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-colors">3</button>
-            <button wire:click="equals" class="bg-blue-600 dark:bg-blue-700 text-white text-xl font-medium p-4 row-span-2 hover:bg-blue-700 dark:hover:bg-blue-800 active:bg-blue-800 transition-colors flex items-center justify-center">=</button>
+            <button wire:click="press('+')" class="bg-amber-500 dark:bg-amber-600 text-white text-xl font-medium p-4 hover:bg-amber-600 dark:hover:bg-amber-700 active:bg-amber-700 transition-colors">+</button>
 
-            {{-- Row 5: 0 (colspan 2), . --}}
+            {{-- Row 5: 0 (colspan 2), ., = (rowspan 2) --}}
             <button wire:click="press('0')" class="bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-xl font-medium p-4 col-span-2 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-colors">0</button>
             <button wire:click="press('.')" class="bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-xl font-medium p-4 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-colors">.</button>
+            <button wire:click="equals" class="bg-blue-600 dark:bg-blue-700 text-white text-xl font-medium p-4 row-span-2 hover:bg-blue-700 dark:hover:bg-blue-800 active:bg-blue-800 transition-colors flex items-center justify-center">=</button>
+
+            {{-- Row 6: Empty for = rowspan --}}
+            <div class="col-span-3"></div>
         </div>
     </div>
 
