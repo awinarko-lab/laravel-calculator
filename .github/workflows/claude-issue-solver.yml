@@ -1,19 +1,29 @@
 name: Claude Issue Solver
 
 on:
-  issues:
-    types: [labeled]
+  issue_comment:
+    types: [created]
 
 jobs:
   solve-issue:
     runs-on: self-hosted
-    if: contains(github.event.label.name, 'claude')
+    if: contains(github.event.comment.body, '@claude')
     permissions:
       contents: write
       pull-requests: write
       issues: write
 
     steps:
+      - name: Extract context from comment
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          # Strip @claude mention and save the rest as context
+          CONTEXT=$(echo "$COMMENT_BODY" | sed 's/@claude//gi' | xargs)
+          echo "$CONTEXT" > /tmp/claude-context.txt
+          echo "CONTEXT=${CONTEXT}" >> "$GITHUB_ENV"
+
       - name: Post "in progress" comment
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -41,14 +51,25 @@ jobs:
           echo "$ISSUE_BODY" > /tmp/issue-body.md
 
       - name: Solve issue with Claude Code
+        env:
+          CLAUDE_CONTEXT: ${{ env.CONTEXT }}
         run: |
           ISSUE_TITLE="${{ github.event.issue.title }}"
           ISSUE_NUMBER="${{ github.event.issue.number }}"
           ISSUE_TYPE="${{ github.event.issue.user.login }}"
+          COMMENT_AUTHOR="${{ github.event.comment.user.login }}"
           BRANCH_NAME="claude/issue-${ISSUE_NUMBER}"
 
           # Create a new branch (force to overwrite if re-run)
           git checkout -B "$BRANCH_NAME"
+
+          # Build the context section if provided
+          CONTEXT_SECTION=""
+          if [ -n "$CLAUDE_CONTEXT" ]; then
+            CONTEXT_SECTION="
+          ## Additional Context (from @${COMMENT_AUTHOR})
+          ${CLAUDE_CONTEXT}"
+          fi
 
           # Run Claude Code to solve the issue
           claude -p "You are Claude Code, an autonomous coding agent. You are working on a Laravel project.
@@ -67,6 +88,8 @@ jobs:
           Title: ${ISSUE_TITLE}
           Issue #${ISSUE_NUMBER}
           Author: @${ISSUE_TYPE}
+          Triggered by: @${COMMENT_AUTHOR}
+          ${CONTEXT_SECTION}
 
           ## Important Rules
           - Follow existing code patterns and conventions found in the codebase
@@ -121,10 +144,3 @@ jobs:
             MSG="❌ **Claude Code failed to solve this issue.** Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details."
           fi
           gh issue comment ${{ github.event.issue.number }} --body "$MSG"
-
-      - name: Remove label
-        if: always()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh issue edit ${{ github.event.issue.number }} --remove-label "claude"
