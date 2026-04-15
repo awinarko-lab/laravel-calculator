@@ -155,7 +155,7 @@ it('starts fresh when pressing digit after result', function () {
         ->assertSet('hasResult', false);
 });
 
-it('loads result from history', function () {
+it('loads expression from history', function () {
     $calc = Calculation::create([
         'expression' => '2 + 3',
         'result' => '5',
@@ -163,7 +163,7 @@ it('loads result from history', function () {
 
     Livewire::test('calculator')
         ->call('loadFromHistory', $calc->id)
-        ->assertSet('expression', '5')
+        ->assertSet('expression', '2+3')
         ->assertSet('hasResult', false);
 });
 
