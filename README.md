@@ -41,11 +41,39 @@ npm run build
 
 ## Running
 
+### Option 1: Local
+
 ```bash
 php artisan serve
 ```
 
 Then visit [http://127.0.0.1:8000](http://127.0.0.1:8000).
+
+### Option 2: Docker Compose
+
+```bash
+docker compose up --build
+```
+
+Then visit [http://127.0.0.1:8000](http://127.0.0.1:8000).
+
+To customize the port, set `APP_PORT` in your `.env` file or run:
+
+```bash
+APP_PORT=3000 docker compose up --build
+```
+
+To stop:
+
+```bash
+docker compose down
+```
+
+To stop and remove persisted data:
+
+```bash
+docker compose down -v
+```
 
 ## Testing
 

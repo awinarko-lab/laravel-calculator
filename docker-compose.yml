@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${APP_PORT:-8000}:80"
+    volumes:
+      - db-data:/var/www/html/database
+      - storage-data:/var/www/html/storage
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+
+volumes:
+  db-data:
+  storage-data:
