@@ -114,7 +114,9 @@ jobs:
           JOB_STATUS: ${{ job.status }}
         run: |
           if [ "$JOB_STATUS" = "success" ]; then
-            MSG="✅ **Claude Code completed this issue.** PR created →"
+            ISSUE_NUMBER="${{ github.event.issue.number }}"
+            PR_URL=$(gh pr list --head "claude/issue-${ISSUE_NUMBER}" --json url -q '.[0].url')
+            MSG="✅ **Claude Code completed this issue.** Pull request: ${PR_URL}"
           else
             MSG="❌ **Claude Code failed to solve this issue.** Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details."
           fi
