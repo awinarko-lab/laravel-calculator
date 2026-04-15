@@ -106,8 +106,8 @@ new class extends Component
         $calculation = Calculation::find($id);
 
         if ($calculation) {
-            // BUG: loads result instead of expression
-            $this->expression = $calculation->result;
+            // Load expression and remove formatting spaces for editing
+            $this->expression = str_replace(' ', '', $calculation->expression);
             $this->result = null;
             $this->hasResult = false;
         }
