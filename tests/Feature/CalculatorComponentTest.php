@@ -178,3 +178,112 @@ it('clears all history', function () {
 
     expect(Calculation::count())->toBe(0);
 });
+
+it('can press opening parenthesis', function () {
+    Livewire::test('calculator')
+        ->call('press', '(')
+        ->assertSet('expression', '(');
+});
+
+it('can press closing parenthesis after number', function () {
+    Livewire::test('calculator')
+        ->call('press', '(')
+        ->call('press', '2')
+        ->call('press', '+')
+        ->call('press', '3')
+        ->call('press', ')')
+        ->assertSet('expression', '(2+3)');
+});
+
+it('evaluates expression with parentheses', function () {
+    Livewire::test('calculator')
+        ->call('press', '(')
+        ->call('press', '2')
+        ->call('press', '+')
+        ->call('press', '3')
+        ->call('press', ')')
+        ->call('press', '*')
+        ->call('press', '4')
+        ->call('equals')
+        ->assertSet('result', '20');
+});
+
+it('evaluates expression with nested parentheses', function () {
+    Livewire::test('calculator')
+        ->call('press', '(')
+        ->call('press', '(')
+        ->call('press', '1')
+        ->call('press', '+')
+        ->call('press', '2')
+        ->call('press', ')')
+        ->call('press', '*')
+        ->call('press', '(')
+        ->call('press', '3')
+        ->call('press', '+')
+        ->call('press', '4')
+        ->call('press', ')')
+        ->call('press', ')')
+        ->call('equals')
+        ->assertSet('result', '21');
+});
+
+it('prevents pressing closing parenthesis without matching opening', function () {
+    Livewire::test('calculator')
+        ->call('press', ')')
+        ->assertSet('expression', '');
+});
+
+it('prevents pressing closing parenthesis too many times', function () {
+    Livewire::test('calculator')
+        ->call('press', '(')
+        ->call('press', '2')
+        ->call('press', '+')
+        ->call('press', '3')
+        ->call('press', ')')
+        ->call('press', ')')
+        ->assertSet('expression', '(2+3)');
+});
+
+it('prevents pressing closing parenthesis immediately after opening', function () {
+    Livewire::test('calculator')
+        ->call('press', '(')
+        ->call('press', ')')
+        ->assertSet('expression', '(');
+});
+
+it('prevents pressing closing parenthesis after operator', function () {
+    Livewire::test('calculator')
+        ->call('press', '(')
+        ->call('press', '2')
+        ->call('press', '+')
+        ->call('press', ')')
+        ->assertSet('expression', '(2+');
+});
+
+it('allows operator after closing parenthesis', function () {
+    Livewire::test('calculator')
+        ->call('press', '(')
+        ->call('press', '2')
+        ->call('press', '+')
+        ->call('press', '3')
+        ->call('press', ')')
+        ->call('press', '*')
+        ->call('press', '4')
+        ->assertSet('expression', '(2+3)*4');
+});
+
+it('saves calculation with parentheses to database', function () {
+    Livewire::test('calculator')
+        ->call('press', '(')
+        ->call('press', '2')
+        ->call('press', '+')
+        ->call('press', '3')
+        ->call('press', ')')
+        ->call('press', '*')
+        ->call('press', '4')
+        ->call('equals');
+
+    expect(Calculation::count())->toBe(1);
+    expect(Calculation::first()->expression)->toBe('( 2 + 3 ) * 4');
+    expect(Calculation::first()->result)->toBe('20');
+});

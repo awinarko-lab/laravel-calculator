@@ -49,8 +49,7 @@ it('handles decimal numbers', function () {
 
 it('handles decimal results', function () {
     $engine = new CalculatorEngine;
-    // BUG: test was changed to match the buggy %.2f format instead of correct %.10f
-    expect($engine->evaluate('10/3'))->toBe('3.33');
+    expect($engine->evaluate('10/3'))->toBe('3.3333333333');
 });
 
 it('handles leading negative number', function () {
@@ -76,4 +75,69 @@ it('returns null for expression ending with operator', function () {
 it('formats whole numbers without decimals', function () {
     $engine = new CalculatorEngine;
     expect($engine->evaluate('4*5'))->toBe('20');
+});
+
+it('evaluates expression with parentheses', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('(2+3)*4'))->toBe('20');
+});
+
+it('evaluates expression with parentheses at end', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('2*(3+4)'))->toBe('14');
+});
+
+it('evaluates expression with nested parentheses', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('((1+2)*(3+4))'))->toBe('21');
+});
+
+it('evaluates expression with multiple parentheses groups', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('(2+3)+(4+5)'))->toBe('14');
+});
+
+it('evaluates expression with nested operations in parentheses', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('(2+3*4)*2'))->toBe('28');
+});
+
+it('evaluates expression with division in parentheses', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('(10/2)+3'))->toBe('8');
+});
+
+it('evaluates expression with parentheses overriding precedence', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('(2+3)*4'))->toBe('20');
+});
+
+it('evaluates expression with deeply nested parentheses', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('(((1+1)))'))->toBe('2');
+});
+
+it('evaluates expression with decimal numbers in parentheses', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('(1.5+2.5)*2'))->toBe('8');
+});
+
+it('evaluates expression with negative number in parentheses', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('(-5+3)*2'))->toBe('-4');
+});
+
+it('returns null for mismatched opening parenthesis', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('(2+3*4'))->toBeNull();
+});
+
+it('returns null for mismatched closing parenthesis', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('2+3)*4'))->toBeNull();
+});
+
+it('returns null for expression ending with opening parenthesis', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('2+('))->toBeNull();
 });
