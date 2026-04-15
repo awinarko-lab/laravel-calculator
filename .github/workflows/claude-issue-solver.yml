@@ -29,8 +29,10 @@ jobs:
         run: cp .env.example .env && php artisan key:generate
 
       - name: Save issue body to file
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
-          echo "${{ github.event.issue.body }}" > /tmp/issue-body.md
+          echo "$ISSUE_BODY" > /tmp/issue-body.md
 
       - name: Solve issue with Claude Code
         run: |
@@ -39,8 +41,8 @@ jobs:
           ISSUE_TYPE="${{ github.event.issue.user.login }}"
           BRANCH_NAME="claude/issue-${ISSUE_NUMBER}"
 
-          # Create a new branch
-          git checkout -b "$BRANCH_NAME"
+          # Create a new branch (force to overwrite if re-run)
+          git checkout -B "$BRANCH_NAME"
 
           # Run Claude Code to solve the issue
           claude -p "You are Claude Code, an autonomous coding agent. You are working on a Laravel project.
@@ -69,8 +71,8 @@ jobs:
           - Run tests before committing to ensure nothing is broken
           - Use conventional commit format: feat:, fix:, refactor:, docs:, etc." --allowedTools "Bash(git*)" "Bash(php*)" "Bash(composer*)" "Bash(npm*)" "Bash(./vendor/bin/pest)" "Bash(cat*)" "Bash(ls*)" "Bash(find*)" "Bash(grep*)" "Read" "Write" "Edit"
 
-          # Push the branch
-          git push origin "$BRANCH_NAME"
+          # Push the branch (force push to overwrite if re-run)
+          git push origin "$BRANCH_NAME" --force
 
       - name: Create Pull Request
         env:
