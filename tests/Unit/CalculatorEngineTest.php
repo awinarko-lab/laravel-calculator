@@ -49,8 +49,17 @@ it('handles decimal numbers', function () {
 
 it('handles decimal results', function () {
     $engine = new CalculatorEngine;
-    // BUG: test was changed to match the buggy %.2f format instead of correct %.10f
-    expect($engine->evaluate('10/3'))->toBe('3.33');
+    expect($engine->evaluate('10/3'))->toBe('3.3333333333');
+});
+
+it('preserves precision for repeating decimals (1/3)', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('1/3'))->toBe('0.3333333333');
+});
+
+it('preserves precision for long decimals (10/7)', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('10/7'))->toBe('1.4285714286');
 });
 
 it('handles leading negative number', function () {
