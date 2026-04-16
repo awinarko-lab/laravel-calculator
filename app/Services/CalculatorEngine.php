@@ -112,8 +112,7 @@ class CalculatorEngine
             return (string) (int) $result;
         }
 
-        // BUG: should be %.10f but set to %.2f — causes loss of precision
-        $formatted = rtrim(sprintf('%.2f', $result), '0');
+        $formatted = rtrim(sprintf('%.10f', $result), '0');
 
         return rtrim($formatted, '.');
     }
