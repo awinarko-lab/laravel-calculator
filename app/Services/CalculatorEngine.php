@@ -4,6 +4,10 @@ namespace App\Services;
 
 class CalculatorEngine
 {
+    private int $position = 0;
+
+    private string $expression;
+
     public function evaluate(string $expression): ?string
     {
         $expression = str_replace(' ', '', $expression);
@@ -12,98 +16,166 @@ class CalculatorEngine
             return null;
         }
 
-        $tokens = $this->tokenize($expression);
-
-        if ($tokens === null || count($tokens) === 0) {
+        // Validate expression only contains valid characters
+        if (! preg_match('/^[\d+\-*\/().]+$/', $expression)) {
             return null;
         }
 
         $lastChar = substr($expression, -1);
-        if (in_array($lastChar, ['+', '-', '*', '/'])) {
+        if (in_array($lastChar, ['+', '-', '*', '/', '('])) {
             return null;
         }
 
-        $tokens = $this->evaluateMultiplicationAndDivision($tokens);
+        $this->expression = $expression;
+        $this->position = 0;
 
-        if ($tokens === null) {
-            return null;
-        }
+        try {
+            $result = $this->parseExpression();
 
-        $result = $this->evaluateAdditionAndSubtraction($tokens);
-
-        if ($result === null) {
-            return null;
-        }
-
-        return $this->formatResult($result);
-    }
-
-    private function tokenize(string $expression): ?array
-    {
-        $tokens = preg_split('/([+\-*\/])/', $expression, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
-
-        if (empty($tokens)) {
-            return null;
-        }
-
-        // Handle leading negative number
-        if ($tokens[0] === '-') {
-            if (count($tokens) < 2) {
-                return null;
-            }
-            array_shift($tokens);
-            $tokens[0] = '-'.$tokens[0];
-        }
-
-        return $tokens;
-    }
-
-    private function evaluateMultiplicationAndDivision(array $tokens): ?array
-    {
-        $i = 0;
-        while ($i < count($tokens)) {
-            if (isset($tokens[$i]) && ($tokens[$i] === '*' || $tokens[$i] === '/')) {
-                $left = (float) $tokens[$i - 1];
-                $right = (float) $tokens[$i + 1];
-
-                if ($tokens[$i] === '/' && $right == 0) {
-                    return null;
-                }
-
-                $result = $tokens[$i] === '*' ? $left * $right : $left / $right;
-                array_splice($tokens, $i - 1, 3, [(string) $result]);
-                $i--;
-            }
-            $i++;
-        }
-
-        return $tokens;
-    }
-
-    private function evaluateAdditionAndSubtraction(array $tokens): ?float
-    {
-        if (empty($tokens)) {
-            return null;
-        }
-
-        $result = (float) $tokens[0];
-
-        for ($i = 1; $i < count($tokens); $i += 2) {
-            if (! isset($tokens[$i + 1])) {
+            // Ensure we've consumed the entire expression
+            if ($this->position < strlen($this->expression)) {
                 return null;
             }
 
-            $operator = $tokens[$i];
-            $operand = (float) $tokens[$i + 1];
+            if ($result === null || ! is_finite($result)) {
+                return null;
+            }
+
+            return $this->formatResult($result);
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    private function parseExpression(): ?float
+    {
+        $result = $this->parseTerm();
+
+        while ($this->position < strlen($this->expression)) {
+            $operator = $this->currentChar();
 
             if ($operator === '+') {
-                $result += $operand;
+                $this->advance();
+                $right = $this->parseTerm();
+                if ($right === null) {
+                    return null;
+                }
+                $result += $right;
             } elseif ($operator === '-') {
-                $result -= $operand;
+                $this->advance();
+                $right = $this->parseTerm();
+                if ($right === null) {
+                    return null;
+                }
+                $result -= $right;
+            } else {
+                break;
             }
         }
 
         return $result;
+    }
+
+    private function parseTerm(): ?float
+    {
+        $result = $this->parseFactor();
+
+        while ($this->position < strlen($this->expression)) {
+            $operator = $this->currentChar();
+
+            if ($operator === '*') {
+                $this->advance();
+                $right = $this->parseFactor();
+                if ($right === null) {
+                    return null;
+                }
+                $result *= $right;
+            } elseif ($operator === '/') {
+                $this->advance();
+                $right = $this->parseFactor();
+                if ($right === null) {
+                    return null;
+                }
+                if ($right == 0) {
+                    return null;
+                }
+                $result /= $right;
+            } else {
+                break;
+            }
+        }
+
+        return $result;
+    }
+
+    private function parseFactor(): ?float
+    {
+        $char = $this->currentChar();
+
+        // Handle parentheses
+        if ($char === '(') {
+            $this->advance();
+            $result = $this->parseExpression();
+            if ($this->currentChar() !== ')') {
+                return null; // Mismatched parentheses
+            }
+            $this->advance();
+
+            return $result;
+        }
+
+        // Handle unary minus/plus
+        if ($char === '-' || $char === '+') {
+            $this->advance();
+            $factor = $this->parseFactor();
+            if ($factor === null) {
+                return null;
+            }
+
+            return $char === '-' ? -$factor : $factor;
+        }
+
+        return $this->parseNumber();
+    }
+
+    private function parseNumber(): ?float
+    {
+        $start = $this->position;
+
+        while ($this->position < strlen($this->expression)) {
+            $char = $this->currentChar();
+            if (is_numeric($char) || $char === '.') {
+                $this->advance();
+            } else {
+                break;
+            }
+        }
+
+        if ($start === $this->position) {
+            return null;
+        }
+
+        $numberStr = substr($this->expression, $start, $this->position - $start);
+
+        if (! is_numeric($numberStr)) {
+            return null;
+        }
+
+        return (float) $numberStr;
+    }
+
+    private function currentChar(): ?string
+    {
+        if ($this->position >= strlen($this->expression)) {
+            return null;
+        }
+
+        return $this->expression[$this->position];
+    }
+
+    private function advance(): void
+    {
+        $this->position++;
     }
 
     private function formatResult(float $result): string
@@ -112,8 +184,7 @@ class CalculatorEngine
             return (string) (int) $result;
         }
 
-        // BUG: should be %.10f but set to %.2f — causes loss of precision
-        $formatted = rtrim(sprintf('%.2f', $result), '0');
+        $formatted = rtrim(sprintf('%.10f', $result), '0');
 
         return rtrim($formatted, '.');
     }
