@@ -178,3 +178,51 @@ it('clears all history', function () {
 
     expect(Calculation::count())->toBe(0);
 });
+
+it('can press percentage operator', function () {
+    Livewire::test('calculator')
+        ->call('press', '5')
+        ->call('press', '0')
+        ->call('press', '%')
+        ->assertSet('expression', '50%');
+});
+
+it('prevents starting with percentage operator', function () {
+    Livewire::test('calculator')
+        ->call('press', '%')
+        ->assertSet('expression', '');
+});
+
+it('replaces percentage operator when pressed after another operator', function () {
+    Livewire::test('calculator')
+        ->call('press', '5')
+        ->call('press', '+')
+        ->call('press', '%')
+        ->assertSet('expression', '5%');
+});
+
+it('evaluates percentage calculation', function () {
+    Livewire::test('calculator')
+        ->call('press', '1')
+        ->call('press', '0')
+        ->call('press', '0')
+        ->call('press', '*')
+        ->call('press', '1')
+        ->call('press', '5')
+        ->call('press', '%')
+        ->call('equals')
+        ->assertSet('result', '15');
+});
+
+it('evaluates percentage addition correctly', function () {
+    Livewire::test('calculator')
+        ->call('press', '2')
+        ->call('press', '0')
+        ->call('press', '0')
+        ->call('press', '+')
+        ->call('press', '1')
+        ->call('press', '0')
+        ->call('press', '%')
+        ->call('equals')
+        ->assertSet('result', '220');
+});

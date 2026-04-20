@@ -77,3 +77,38 @@ it('formats whole numbers without decimals', function () {
     $engine = new CalculatorEngine;
     expect($engine->evaluate('4*5'))->toBe('20');
 });
+
+it('evaluates standalone percentage', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('50%'))->toBe('0.5');
+});
+
+it('evaluates percentage with multiplication', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('100*15%'))->toBe('15');
+});
+
+it('evaluates percentage with addition', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('200+10%'))->toBe('220');
+});
+
+it('evaluates percentage with subtraction', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('200-10%'))->toBe('180');
+});
+
+it('evaluates percentage with division', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('100/25%'))->toBe('400');
+});
+
+it('evaluates complex expression with percentage', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('100+50*10%'))->toBe('105');
+});
+
+it('evaluates decimal percentage', function () {
+    $engine = new CalculatorEngine;
+    expect($engine->evaluate('12.5%'))->toBe('0.125');
+});
