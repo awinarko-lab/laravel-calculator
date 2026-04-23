@@ -132,9 +132,19 @@ new class extends Component
 };
 ?>
 
-<div class="flex flex-col lg:flex-row gap-6 w-full max-w-3xl">
+<div class="flex flex-col lg:flex-row gap-6 w-full max-w-3xl" x-data="{ hasFocus: false }" @keydown.window="hasFocus = true" @click.away="hasFocus = false" tabindex="0"
+    @keydown.="if ($event.key >= '0' && $event.key <= '9') { $event.preventDefault(); $wire.press($event.key); }"
+    @keydown."+="$wire.press('+')"
+    @keydown.-="$wire.press('-')"
+    @keydown.*="$wire.press('*')"
+    @keydown./="$event.preventDefault(); $wire.press('/')"
+    @keydown.enter="$wire.equals()"
+    @keydown.="if ($event.key === '=') { $event.preventDefault(); $wire.equals(); }"
+    @keydown.escape="$wire.clear()"
+    @keydown.backspace="$wire.backspace()"
+    @keydown..="if ($event.key === '.') { $event.preventDefault(); $wire.press('.'); }">
     {{-- Calculator --}}
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden w-full max-w-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden w-full max-w-sm" :class="{ 'ring-4 ring-blue-500': hasFocus }">
         {{-- Display --}}
         <div class="bg-gray-800 dark:bg-gray-900 p-6">
             <div class="text-right text-sm text-gray-400 h-6 overflow-hidden">

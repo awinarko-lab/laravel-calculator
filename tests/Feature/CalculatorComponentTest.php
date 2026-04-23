@@ -178,3 +178,85 @@ it('clears all history', function () {
 
     expect(Calculation::count())->toBe(0);
 });
+
+// Keyboard interaction tests
+it('can input digits via keyboard (0-9)', function () {
+    Livewire::test('calculator')
+        ->call('press', '0')
+        ->call('press', '1')
+        ->call('press', '2')
+        ->call('press', '3')
+        ->call('press', '4')
+        ->call('press', '5')
+        ->call('press', '6')
+        ->call('press', '7')
+        ->call('press', '8')
+        ->call('press', '9')
+        ->assertSet('expression', '0123456789');
+});
+
+it('can input operators via keyboard (+, -, *, /)', function () {
+    Livewire::test('calculator')
+        ->call('press', '5')
+        ->call('press', '+')
+        ->call('press', '3')
+        ->call('press', '-')
+        ->call('press', '2')
+        ->call('press', '*')
+        ->call('press', '4')
+        ->call('press', '/')
+        ->call('press', '2')
+        ->assertSet('expression', '5+3-2*4/2');
+});
+
+it('can input decimal point via keyboard', function () {
+    Livewire::test('calculator')
+        ->call('press', '3')
+        ->call('press', '.')
+        ->call('press', '1')
+        ->call('press', '4')
+        ->assertSet('expression', '3.14');
+});
+
+it('can trigger equals via Enter key', function () {
+    Livewire::test('calculator')
+        ->call('press', '2')
+        ->call('press', '+')
+        ->call('press', '3')
+        ->call('equals')
+        ->assertSet('result', '5')
+        ->assertSet('hasResult', true);
+});
+
+it('can clear calculator via Escape key', function () {
+    Livewire::test('calculator')
+        ->call('press', '1')
+        ->call('press', '2')
+        ->call('press', '3')
+        ->call('clear')
+        ->assertSet('expression', '')
+        ->assertSet('result', null)
+        ->assertSet('hasResult', false);
+});
+
+it('can backspace via keyboard', function () {
+    Livewire::test('calculator')
+        ->call('press', '1')
+        ->call('press', '2')
+        ->call('press', '3')
+        ->call('backspace')
+        ->assertSet('expression', '12');
+});
+
+it('handles complex calculation via keyboard input', function () {
+    Livewire::test('calculator')
+        ->call('press', '1')
+        ->call('press', '0')
+        ->call('press', '+')
+        ->call('press', '5')
+        ->call('press', '*')
+        ->call('press', '2')
+        ->call('equals')
+        ->assertSet('result', '20')
+        ->assertSet('hasResult', true);
+});
