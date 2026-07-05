@@ -2,6 +2,7 @@
 
 use App\Models\Calculation;
 use App\Services\CalculatorEngine;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 new class extends Component
@@ -123,11 +124,10 @@ new class extends Component
         return preg_replace('/([+\-*\/])/', ' $1 ', $expression);
     }
 
-    public function with(): array
+    #[Computed]
+    public function calculations()
     {
-        return [
-            'calculations' => Calculation::latest()->take(20)->get(),
-        ];
+        return Calculation::latest()->take(20)->get();
     }
 };
 ?>
@@ -187,12 +187,12 @@ new class extends Component
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg w-full max-w-sm overflow-hidden">
         <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-lg font-semibold text-gray-800 dark:text-white">History</h2>
-            @if($calculations->isNotEmpty())
+            @if($this->calculations->isNotEmpty())
                 <button wire:click="clearHistory" wire:confirm="Clear all history?" class="text-sm text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">Clear</button>
             @endif
         </div>
         <div class="divide-y divide-gray-100 dark:divide-gray-700 max-h-96 overflow-y-auto">
-            @forelse($calculations as $calculation)
+            @forelse($this->calculations as $calculation)
                 <button wire:click="loadFromHistory({{ $calculation->id }})" class="w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                     <div class="text-sm text-gray-500 dark:text-gray-400">{{ $calculation->expression }}</div>
                     <div class="text-lg font-semibold text-gray-800 dark:text-white">= {{ $calculation->result }}</div>

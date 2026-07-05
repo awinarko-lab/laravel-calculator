@@ -178,3 +178,27 @@ it('clears all history', function () {
 
     expect(Calculation::count())->toBe(0);
 });
+
+it('history panel updates after equals', function () {
+    $component = Livewire::test('calculator')
+        ->call('press', '2')
+        ->call('press', '+')
+        ->call('press', '3')
+        ->call('equals')
+        ->assertSet('result', '5')
+        ->assertSee('2 + 3')
+        ->assertSee('= 5');
+
+    expect(Calculation::count())->toBe(1);
+});
+
+it('history panel shows no calculations after clearHistory', function () {
+    Calculation::create(['expression' => '1 + 1', 'result' => '2']);
+
+    $component = Livewire::test('calculator')
+        ->assertSee('1 + 1')
+        ->call('clearHistory')
+        ->assertSee('No calculations yet');
+
+    expect(Calculation::count())->toBe(0);
+});

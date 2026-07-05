@@ -8,4 +8,5 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable(['expression', 'result'])]
 class Calculation extends Model
 {
+    //
 }
